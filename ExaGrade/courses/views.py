@@ -1,7 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Course
-from exams.models import Exam, Grade
-from .forms import CourseForm
+from exams.models import Exam
+from django.apps import apps  # Import Django's app registry
+from .forms import CourseForm  # ✅ FIXED: Moved to a new line
 from django.utils.crypto import get_random_string
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -37,27 +38,28 @@ def course_detail_view(request, course_id):
     course = get_object_or_404(Course, id=course_id)
     exams = Exam.objects.filter(course=course)
 
-    # Ensure enrolled students are fetched only for instructors
+    # ✅ FIXED: Load Grade model dynamically inside the function
+    Grade = apps.get_model("exams", "Grade")
+
+    # Fetch students only for instructors
     students = course.students.all() if request.user.is_instructor else None
 
-    # Fetch grades - only the student's own grades if they are a student
+    # Fetch grades based on user role
     if request.user.is_student:
         for exam in exams:
-            exam.grades = Grade.objects.filter(exam=exam, student=request.user)  # Fetch only their grades
-    else:
+            exam.grades = Grade.objects.filter(exam=exam, student=request.user)  # Only student's grades
+    else:  # Instructor
         for exam in exams:
-            exam.grades = Grade.objects.filter(exam=exam)  # Fetch all grades for instructors
+            exam.grades = Grade.objects.filter(exam=exam)  # All grades
 
     return render(request, "courses/course_detail.html", {
         "course": course,
         "exams": exams,
-        "students": students  # Pass students list to the template
+        "students": students,  # Only passed for instructors
     })
-
 
 @login_required
 def delete_course(request, course_id):
-    # Use `get_object_or_404` to ensure a valid course is retrieved or return 404
     course = get_object_or_404(Course, id=course_id)
 
     # Ensure only the instructor can delete the course
@@ -69,7 +71,6 @@ def delete_course(request, course_id):
     course.delete()
     messages.success(request, "Course deleted successfully.")
     
-    # Redirect back to the courses list
     return redirect("courses:list")
 
 @login_required
@@ -87,4 +88,3 @@ def add_course(request):
     else:
         form = CourseForm()
     return render(request, "courses/add_course.html", {"form": form})
-
