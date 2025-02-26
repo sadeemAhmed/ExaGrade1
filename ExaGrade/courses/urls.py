@@ -6,8 +6,8 @@ from .views import add_course, course_detail_view, course_list, delete_course, e
 app_name = "courses"
 
 urlpatterns = [
+    path("<int:course_id>/", course_detail_view, name="detail"),  # Course detail view
     path("", course_list, name="list"),
-    path('<int:course_id>/', course_detail_view, name="detail"),
     path("<int:course_id>/delete/", delete_course, name="delete"), 
     path("add/", add_course, name="add"),
     path('enroll/', enroll_course, name="enroll"), 

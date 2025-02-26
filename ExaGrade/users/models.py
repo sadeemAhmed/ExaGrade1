@@ -8,15 +8,15 @@ class CustomUser(AbstractUser):
     bio = models.TextField(blank=True, null=True)
     profile_image = models.ImageField(
         upload_to="profiles/",
-        default="profiles/profile-default.png",  
+        default="profiles/profile-default.png",
         null=True,
         blank=True
     )
 
-def save(self, *args, **kwargs):
-        if not self.profile_image:  
+    def save(self, *args, **kwargs):
+        if not self.profile_image:
             self.profile_image = "profiles/profile-default.png"
         super().save(*args, **kwargs)
 
-def __str__(self):
-    return self.username
+    def __str__(self):
+        return self.username
