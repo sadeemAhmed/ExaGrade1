@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Electronic Exams</h2>
+
+    <ul>
+        {% for exam in exams %}
+            <li>
+                <a href="{% url 'electronic_exams:electronic_exam_detail' exam.pk %}">{{ exam.title }}</a>
+            </li>
+        {% empty %}
+            <p>No electronic exams available.</p>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'electronic_exams:create_electronic_exam' %}" class="px-4 py-2 bg-blue-500 text-white rounded">
+        Create New Exam
+    </a>
+
+    {% for exam in exams %}
+    <div class="exam-card">
+        <h2>{{ exam.title }}</h2>
+        <p>{{ exam.description }}</p>
+        <a href="{% url 'electronic_exams:electronic_exam_detail' exam.pk %}" class="btn">View Details</a>
+    </div>
+    {% endfor %}  <!-- ✅ Ensure this `endfor` is properly closing the loop -->
+
+{% endblock %}

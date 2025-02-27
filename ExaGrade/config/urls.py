@@ -10,6 +10,7 @@ urlpatterns = [
     path("users/", include("users.urls", namespace="users")),  # ✅ User management
     path("courses/", include("courses.urls", namespace="courses")),  # ✅ Courses
     path("exams/", include("exams.urls", namespace="exams")),  # ✅ Exams
+    path("electronic_exams/", include("electronic_exams.urls")),
 ]
 
 # ✅ Ensure media files (PDFs, images) work in development

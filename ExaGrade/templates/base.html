@@ -68,7 +68,16 @@
                         </a>
                     </li>
 
+                    <!-- Electronic Exams Section -->
+                    <li>
+                        <a href="{% url 'electronic_exams:exam_list' %}" class="flex items-center space-x-2 hover:text-[#98BBF5]">
+                            <i class="fas fa-laptop-code"></i>
+                            <span>Electronic Exams</span>
+                        </a>
+                    </li>
+
                     {% if user.is_instructor %}
+                        <!-- Traditional Exams -->
                         <li>
                             <a href="{% url 'exams:list' %}" class="flex items-center space-x-2 hover:text-[#98BBF5]">
                                 <i class="fas fa-file-alt"></i>

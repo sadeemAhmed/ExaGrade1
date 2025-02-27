@@ -37,5 +37,11 @@
             📥 Download PDF
         </a>
     </div>
+    {% extends "base.html" %}
+{% block content %}
+<h2>{{ exam.title }}</h2>
+<a href="{% url 'take_electronic_exam' exam.pk %}">Take Exam</a>
+{% endblock %}
+
 </div>
 {% endblock %}
