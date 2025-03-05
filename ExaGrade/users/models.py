@@ -6,6 +6,8 @@ class CustomUser(AbstractUser):
     is_student = models.BooleanField(default=False)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
+    student_responses = models.ManyToManyField("electronic_exams.StudentResponse", related_name="grades_received", blank=True)
+
     profile_image = models.ImageField(
         upload_to="profiles/",
         default="profiles/profile-default.png",
@@ -20,3 +22,7 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
+
+def get_grades(self):
+        """Retrieve all grades for the student."""
+        return self.student_responses.all()

@@ -101,7 +101,7 @@ def student_dashboard(request):
         return redirect("users:instructor_dashboard")
 
     enrolled_courses = request.user.enrolled_courses.all()
-    grades = request.user.grades_received.all()
+    grades = request.user.exam_responses.all()  
 
     return render(request, "users/student_dashboard.html", {"enrolled_courses": enrolled_courses, "grades": grades})
 

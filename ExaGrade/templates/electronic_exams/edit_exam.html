@@ -44,10 +44,92 @@
             <button type="submit" class="mt-6 w-full bg-blue-600 text-white py-3 rounded-lg font-semibold text-lg shadow-md hover:bg-blue-700 transition">
                 ✅ Update Exam
             </button>
+
+            <!-- Delete Exam Button with Confirmation -->
+            <button id="openDeleteModal"
+                class="mt-6 w-full bg-red-600 text-white py-3 rounded-lg font-semibold text-lg shadow-md hover:bg-red-700 transition">
+                ❌ Delete Exam
+            </button>
         </form>
 
     </div>
 </div>
+
+
+
+<!-- ✅ Delete Confirmation Modal -->
+<div id="deleteModal"
+    class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+        
+        <!-- ❌ Warning Header -->
+        <div class="flex items-center gap-4 border-b pb-3">
+            <div class="text-red-600 text-4xl">⚠️</div>
+            <h2 class="text-2xl font-semibold text-gray-900">Confirm Deletion</h2>
+        </div>
+
+        <!-- ❗ Warning Message -->
+        <p class="text-gray-700 mt-4 text-lg leading-relaxed">
+            Are you sure you want to <strong class="text-red-600">delete this exam</strong>?  
+            This action <strong>cannot</strong> be undone.
+        </p>
+
+        <!-- 🚀 Action Buttons -->
+        <div class="mt-6 flex justify-end gap-4">
+            <button id="cancelDelete"
+                class="px-5 py-2 bg-gray-300 text-gray-800 font-medium rounded-lg shadow-md hover:bg-gray-400 transition">
+                ❌ Cancel
+            </button>
+            <button id="confirmDelete"
+                class="px-5 py-2 bg-red-600 text-white font-medium rounded-lg shadow-md hover:bg-red-700 transition">
+                ✅ Yes, Delete
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<!-- ✅ JavaScript for Delete Modal -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const deleteModal = document.getElementById("deleteModal");
+    const openDeleteModal = document.getElementById("openDeleteModal");
+    const cancelDelete = document.getElementById("cancelDelete");
+    const confirmDelete = document.getElementById("confirmDelete");
+
+    // ✅ Open Delete Modal
+    openDeleteModal.addEventListener("click", function (event) {
+        event.preventDefault(); // Prevent form submission
+        deleteModal.classList.remove("hidden");
+    });
+
+    // ❌ Close Modal on Cancel
+    cancelDelete.addEventListener("click", function () {
+        deleteModal.classList.add("hidden");
+    });
+
+    // ✅ Confirm Delete & Redirect to Exam List
+    confirmDelete.addEventListener("click", function () {
+        fetch("{% url 'electronic_exams:delete_exam' pk=exam.pk %}", {
+            method: "POST",
+            headers: { "X-CSRFToken": "{{ csrf_token }}", "Content-Type": "application/json" },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                // ✅ Close the modal instantly
+                deleteModal.classList.add("hidden");
+
+                // ✅ Redirect to Exam List after a short delay
+                setTimeout(() => {
+                    window.location.href = "{% url 'electronic_exams:exam_list' %}";
+                }, 300);
+            }
+        });
+    });
+});
+</script>
+
 
 <!-- ✅ JavaScript for Dynamic Updates -->
 <script>

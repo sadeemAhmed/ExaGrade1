@@ -26,11 +26,27 @@ def course_list(request):
 @login_required
 def enroll_course(request):
     if request.method == "POST":
-        course_code = request.POST.get("course_code")
-        course = get_object_or_404(Course, course_code=course_code)
-        request.user.enrolled_courses.add(course)
-        messages.success(request, f"🎓 You have successfully joined {course.name}!")
-        return redirect("courses:detail", course_id=course.id)
+        course_code = request.POST.get("course_code", "").strip().upper()  # ✅ Ensure uppercase
+
+        print(f"📌 Received Course Code: {course_code}")  # ✅ Debugging print
+
+        if not course_code:
+            messages.error(request, "⚠️ Please enter a valid course code.")
+            return redirect("courses:list")
+
+        try:
+            course = Course.objects.get(course_code=course_code)  # ✅ Fetch course by code
+            print(f"✅ Course Found: {course.name} ({course.course_code})")  # ✅ Debugging print
+            
+            request.user.enrolled_courses.add(course)
+            messages.success(request, f"🎓 You have successfully joined {course.name}!")
+            return redirect("courses:detail", course_id=course.id)
+
+        except Course.DoesNotExist:
+            print("❌ ERROR: No course found with that code.")  # ✅ Debugging print
+            messages.error(request, "❌ Invalid course code. Please check and try again.")
+            return redirect("courses:list")
+
     return render(request, "users/enroll_course.html")
 
 @login_required
@@ -38,24 +54,24 @@ def course_detail_view(request, course_id):
     course = get_object_or_404(Course, id=course_id)
     exams = Exam.objects.filter(course=course)
 
-    # ✅ FIXED: Load Grade model dynamically inside the function
+    # ✅ Load the Grade model dynamically
     Grade = apps.get_model("exams", "Grade")
 
     # Fetch students only for instructors
     students = course.students.all() if request.user.is_instructor else None
 
-    # Fetch grades based on user role
+    # ✅ Create a dictionary of student grades indexed by exam ID
+    student_grades = {}
     if request.user.is_student:
         for exam in exams:
-            exam.grades = Grade.objects.filter(exam=exam, student=request.user)  # Only student's grades
-    else:  # Instructor
-        for exam in exams:
-            exam.grades = Grade.objects.filter(exam=exam)  # All grades
+            grade = Grade.objects.filter(exam=exam, student=request.user).first()
+            student_grades[exam.id] = grade.score if grade else None
 
     return render(request, "courses/course_detail.html", {
         "course": course,
         "exams": exams,
         "students": students,  # Only passed for instructors
+        "student_grades": student_grades,  # ✅ Pass as a dictionary
     })
 
 @login_required

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md">
+    <h1 class="text-3xl font-bold text-gray-800">{{ exam.title }} - Student Grades</h1>
+
+    <table class="w-full border-collapse border border-gray-300 mt-6">
+        <thead>
+            <tr class="bg-gray-100">
+                <th class="p-3 border border-gray-300">Student Name</th>
+                <th class="p-3 border border-gray-300">Grade</th>
+                <th class="p-3 border border-gray-300">Feedback</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for response in students_grades %}
+            <tr>
+                <td class="p-3 border border-gray-300">{{ response.student.get_full_name }}</td>
+                <td class="p-3 border border-gray-300">
+                    {% if response.score is not None %}
+                        <strong>{{ response.score }}</strong> / {{ exam.total_marks }}
+                    {% else %}
+                        <span class="text-gray-500">Not Graded Yet</span>
+                    {% endif %}
+                </td>
+                <td class="p-3 border border-gray-300">
+                    {% if response.feedback %}
+                        <span class="text-green-500">{{ response.feedback }}</span>
+                    {% else %}
+                        <span class="text-gray-500">No Feedback Yet</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="p-3 border border-gray-300 text-center text-gray-500">No students have taken this exam yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{% url 'courses:detail' exam.course.id %}" class="mt-4 block bg-blue-500 text-white text-center py-2 rounded-lg">
+        🔙 Back to Course
+    </a>
+</div>
+{% endblock %}

@@ -13,6 +13,7 @@
                     📖 {{ exam.title }}
                 </h1>
 
+                {% if user.is_instructor %}
                 <!-- Toggle Exam Availability -->
                 <div class="flex items-center gap-4">
                     <p class="text-sm font-semibold">{{ exam.is_active|yesno:"🟢 Active,🔴 Disabled" }}</p>
@@ -21,6 +22,7 @@
                         <span class="slider round"></span>
                     </label>
                 </div>
+                {% endif %}
             </div>
 
             <!-- Exam Info -->
@@ -28,10 +30,28 @@
                 <p class="text-gray-700 text-lg">📖 Course: <span class="font-semibold">{{ exam.course.name }}</span></p>
                 <p class="text-gray-700 text-lg">⏳ Duration: <span class="font-semibold">{{ exam.duration_minutes|default:"Not Set" }} min</span></p>
                 <p class="text-gray-700 text-lg">💯 Total Marks: <span class="font-semibold">{{ exam.total_marks }}</span></p>
-                <p class="text-gray-700 text-lg">👨‍🎓 Students Taken: <span class="font-semibold">{{ exam.student_responses.count }}</span></p>
+
+                {% if user.is_student %}
+                <p class="text-gray-700 text-lg">📊 Your Grade: 
+                    <span class="font-semibold {% if student_grade == 'Not Taken Yet' or student_grade == 'Not Graded Yet' %}text-red-500{% else %}text-green-600{% endif %}">
+                        {{ student_grade }}
+                    </span>
+                </p>
+
+                <!-- "Take Exam" Button (Only if not taken yet) -->
+                {% if show_take_exam_button %}
+                <div class="mt-6">
+                    <a href="{% url 'electronic_exams:take_exam' exam.pk %}"
+                        class="w-full text-center block px-5 py-3 bg-blue-600 text-white text-lg font-semibold rounded-lg shadow-md transition hover:bg-blue-700 hover:scale-105">
+                        📝 Take Exam
+                    </a>
+                </div>
+                {% endif %}
+                {% endif %}
             </div>
 
             <!-- Action Buttons -->
+            {% if user.is_instructor %}
             <div class="flex gap-4 mt-6">
                 <a href="{% url 'electronic_exams:edit_exam' exam.pk %}"
                     class="px-5 py-2 bg-yellow-500 text-white font-medium rounded-lg shadow-md hover:bg-yellow-600 transition">
@@ -42,6 +62,7 @@
                     👀 Preview Exam
                 </button>
             </div>
+            {% endif %}
 
             <!-- Exam 🗑️ Questions (Preview Mode) -->
             <div id="exam_preview" class="hidden mt-8">
@@ -69,6 +90,7 @@
         </div>
 
         <!-- 📌 Student Sidebar -->
+        {% if user.is_instructor %}
         <div class="w-80 bg-white shadow-xl rounded-3xl p-6">
             <h2 class="text-2xl font-semibold text-gray-800 border-b pb-4">👨‍🎓 Students Taken</h2>
             <ul class="mt-4 space-y-3">
@@ -82,6 +104,7 @@
                 {% endfor %}
             </ul>
         </div>
+        {% endif %}
     </div>
 </div>
 

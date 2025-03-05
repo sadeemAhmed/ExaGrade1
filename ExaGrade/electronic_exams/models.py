@@ -42,9 +42,11 @@ class Choice(models.Model):
 
 # ✅ Student Response Model
 class StudentResponse(models.Model):
-    student = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="responses")
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="responses")
+    student = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="exam_responses")
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="student_responses")
     answer_text = models.TextField()
+    score = models.FloatField(null=True, blank=True)  # ✅ Stores grades
+    feedback = models.TextField(blank=True, null=True)
     is_correct = models.BooleanField(null=True, blank=True)  # ✅ AI grading field
     score = models.FloatField(null=True, blank=True)
 

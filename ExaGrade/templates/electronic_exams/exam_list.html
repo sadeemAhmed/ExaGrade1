@@ -9,10 +9,12 @@
             <h1 class="text-4xl font-extrabold text-gray-900 flex items-center gap-2">
                 📚 Electronic Exams
             </h1>
+            {% if user.is_instructor %}
             <a href="{% url 'electronic_exams:create_exam' %}"  
                 class="px-6 py-3 bg-blue-600 text-white text-lg font-semibold rounded-lg shadow-md transition duration-300 ease-in-out hover:bg-blue-700 hover:scale-105 flex items-center gap-2">
                 ➕ Create New Exam
             </a>
+            {% endif %}
         </div>
 
         <!-- Exam List -->
@@ -24,6 +26,7 @@
                         <!-- Exam Title -->
                         <h2 class="text-xl font-semibold text-gray-900">{{ exam.title }}</h2>
                         
+                        {% if user.is_instructor %}
                         <!-- Created Date -->
                         <p class="text-gray-500 text-sm mt-1 flex items-center gap-2">
                             🗓 Created: <span class="font-medium">{{ exam.created_at|date:"F j, Y" }}</span>
@@ -34,33 +37,45 @@
                             🔢 Total Marks: <span class="font-bold text-blue-600">{{ exam.total_marks }}</span>
                         </p>
 
-                        <!-- Student Participation -->
+                        <!-- Students Taken Count (ONLY FOR INSTRUCTORS) -->
                         <p class="text-gray-700 text-sm mt-1 flex items-center gap-2">
                             👨‍🎓 Students Taken: <span class="font-bold text-green-600">{{ exam.student_responses.count }}</span>
                         </p>
 
-                        <!-- Student List (Collapsible) -->
-                        {% if exam.student_responses.exists %}
-                        <details class="mt-3 cursor-pointer text-blue-600 hover:text-blue-800 transition">
-                            <summary class="text-sm font-medium flex items-center gap-2">
-                                📋 View Students
-                            </summary>
-                            <ul class="mt-2 bg-gray-100 p-3 rounded-lg text-sm space-y-1">
-                                {% for response in exam.student_responses.all %}
-                                    <li class="border-b py-1 flex items-center gap-2">
-                                        👤 <span class="font-medium">{{ response.student.get_full_name }}</span>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        </details>
+                        {% elif user.is_student %}
+                        <!-- Course Name (FOR STUDENTS) -->
+                        <p class="text-gray-700 text-sm mt-1 flex items-center gap-2">
+                            📖 Course: <span class="font-medium">{{ exam.course.name }}</span>
+                        </p>
+
+                        <!-- Student's Grade (FOR STUDENTS) -->
+                        <p class="text-gray-700 text-sm mt-1 flex items-center gap-2">
+                            📊 Your Grade: 
+                            {% with student_grade=student_grades|default_if_none:exam.id %}
+                                {% if student_grade == "Not Taken Yet" %}
+                                    <span class="font-semibold text-gray-500">Not Taken Yet</span>
+                                {% elif student_grade == "Not Graded Yet" %}
+                                    <span class="font-semibold text-yellow-500">Not Graded Yet</span>
+                                {% else %}
+                                    <span class="font-semibold text-green-600">{{ student_grade }} / {{ exam.total_marks }}</span>
+                                {% endif %}
+                            {% endwith %}
+                        </p>
                         {% endif %}
 
-                        <!-- "View Details" Button -->
+                        <!-- "Take Exam" or "View Details" Button -->
                         <div class="mt-5">
-                            <a href="{% url 'electronic_exams:exam_detail' exam.pk %}"  
-                                class="w-full text-center block px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-md transition hover:bg-blue-700 hover:scale-105">
-                                📄 View Details
-                            </a>
+                            {% if user.is_student and student_grade == "Not Taken Yet" %}
+                                <a href="{% url 'electronic_exams:take_exam' exam.pk %}"  
+                                    class="w-full text-center block px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg shadow-md transition hover:bg-green-700 hover:scale-105">
+                                    🎯 Take Exam
+                                </a>
+                            {% else %}
+                                <a href="{% url 'electronic_exams:exam_detail' exam.pk %}"  
+                                    class="w-full text-center block px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-md transition hover:bg-blue-700 hover:scale-105">
+                                    📄 View Details
+                                </a>
+                            {% endif %}
                         </div>
                     </div>
                 {% endfor %}
