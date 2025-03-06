@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md">
+    <h1 class="text-3xl font-bold text-gray-800">📊 Exam Results: {{ exam.title }}</h1>
+
+    <div class="mt-6">
+        {% for response in responses %}
+        <div class="border-b pb-4 mb-4">
+            <p class="text-lg font-semibold">{{ forloop.counter }}. {{ response.question.text }}</p>
+            <p class="text-gray-700 mt-1"><strong>Your Answer:</strong> {{ response.answer_text }}</p>
+
+            {% if response.question.question_type in "MCQ TF" %}
+                <p class="text-gray-600"><strong>Score:</strong> {{ response.score }}</p>
+                <p class="text-gray-600"><strong>Correct Answer:</strong> {{ response.question.ideal_answer }}</p>
+            {% else %}
+                <p class="text-gray-600"><strong>AI Score:</strong> {{ response.score }} / 10</p>
+                <p class="text-blue-500"><strong>AI Feedback:</strong> {{ response.ai_feedback }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

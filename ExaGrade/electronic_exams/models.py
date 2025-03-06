@@ -15,7 +15,11 @@ class ElectronicExam(models.Model):
 
 # ✅ Question Model
 class Question(models.Model):
-    exam = models.ForeignKey(ElectronicExam, on_delete=models.CASCADE, related_name="questions")
+    exam = models.ForeignKey(
+        "ElectronicExam", 
+        on_delete=models.CASCADE, 
+        related_name="questions"
+    )
     text = models.TextField()
     question_type = models.CharField(
         max_length=20,
@@ -27,10 +31,15 @@ class Question(models.Model):
         ],
     )
     ideal_answer = models.TextField(blank=True, null=True)  # ✅ For AI grading
+    marks = models.DecimalField(  # ✅ Ensure instructor-defined marks
+        max_digits=5, 
+        decimal_places=2, 
+        default=1.0, 
+        help_text="Total marks assigned by the instructor for this question."
+    )
 
     def __str__(self):
-        return self.text
-
+        return f"{self.text} ({self.marks} marks)"
 # ✅ Choice Model (for MCQs)
 class Choice(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="choices")
@@ -43,12 +52,11 @@ class Choice(models.Model):
 # ✅ Student Response Model
 class StudentResponse(models.Model):
     student = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="exam_responses")
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="student_responses")
+    question = models.ForeignKey("Question", on_delete=models.CASCADE, related_name="responses")
     answer_text = models.TextField()
-    score = models.FloatField(null=True, blank=True)  # ✅ Stores grades
-    feedback = models.TextField(blank=True, null=True)
-    is_correct = models.BooleanField(null=True, blank=True)  # ✅ AI grading field
-    score = models.FloatField(null=True, blank=True)
+    is_correct = models.BooleanField(null=True, blank=True)  # For MCQ & TF grading
+    score = models.FloatField(null=True, blank=True)  # Score given by AI
+    ai_feedback = models.TextField(blank=True, null=True)  # AI-generated feedback
 
     def __str__(self):
-        return f"{self.student} - {self.question.text}"
+        return f"{self.student.username} - {self.question.text[:50]}"

@@ -29,7 +29,7 @@ urlpatterns = [
     path("<int:pk>/delete/", DeleteExamView.as_view(), name="delete_exam"),
     
     path("take/<int:pk>/", TakeExamView.as_view(), name="take_exam"),
-    #path("exam/<int:pk>/results/", ExamResultsView.as_view(), name="exam_results"),
     path("auto-save/", auto_save_response, name="auto_save_response"),
     path("<int:exam_id>/students_grades/", views.exam_students_grades, name="exam_students_grades"),
+    path("results/<int:pk>/", ExamResultsView.as_view(), name="exam_results"),
 ]

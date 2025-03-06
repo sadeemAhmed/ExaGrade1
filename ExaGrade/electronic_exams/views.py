@@ -1,4 +1,5 @@
 import json
+import re
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Sum 
 from django.views import View
@@ -9,6 +10,9 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse_lazy
 from django.views.generic import UpdateView  # ✅ Ensure this is imported
+import requests 
+from django.conf import settings 
+from .gpt_ai import grade_with_gpt
 
 
 # ✅ Import models properly
@@ -29,11 +33,25 @@ class ExamListView(View):
 
         if request.user.is_student:
             student_responses = StudentResponse.objects.filter(student=request.user)
-            for exam in exams:
-                total_score = student_responses.filter(question__exam=exam).aggregate(total_score=Sum("score"))["total_score"] or 0
-                student_grades[exam.id] = total_score  # Store grade per exam ID
 
-        return render(request, "electronic_exams/exam_list.html", {"exams": exams, "student_grades": student_grades,})
+            for exam in exams:
+                # ✅ Total score from responses
+                total_score = student_responses.filter(question__exam=exam).aggregate(total_score=Sum("score"))["total_score"]
+                
+                # ✅ Normalize grade to exam's total marks
+                if total_score is not None:
+                    student_grades[exam.id] = round((total_score / exam.total_marks) * exam.total_marks, 2)
+                else:
+                    student_grades[exam.id] = "Not Taken Yet"
+
+                # ✅ If the exam has AI-graded questions, mark as "Not Graded Yet"
+                if student_responses.filter(question__exam=exam, question__question_type__in=["SHORT", "LONG"]).exists():
+                    student_grades[exam.id] = "Not Graded Yet"
+
+        return render(request, "electronic_exams/exam_list.html", {
+            "exams": exams,
+            "student_grades": student_grades
+        })
 
 
 # ✅ Exam Detail View
@@ -231,17 +249,18 @@ class TakeExamView(View):
         )
 
     def post(self, request, pk):
-        """Handles exam submission & ensures grading scales properly."""
+        """Handles exam submission & ensures AI grading works properly."""
         exam = get_object_or_404(ElectronicExam, pk=pk)
         student = request.user
 
         total_score = 0  # ✅ Accumulate total score
-        total_marks = exam.total_marks  # ✅ Use the instructor-defined total marks
+        total_marks = exam.total_marks  # ✅ Instructor-defined total marks
 
         for question in exam.questions.all():
             response_text = request.POST.get(f"q{question.id}", "").strip()
             is_correct = None
             score = 0  # ✅ Default score is 0
+            ai_feedback = None
 
             # ✅ Auto-grade MCQ & TF
             if question.question_type in ["MCQ", "TF"]:
@@ -251,18 +270,23 @@ class TakeExamView(View):
 
             # ✅ AI-Graded Questions (Short & Long)
             if question.question_type in ["SHORT", "LONG"]:
-                score = None  # AI will process later
+                score, ai_feedback = grade_with_gpt(question.text, response_text, question.ideal_answer, question.marks)
 
             # ✅ Save Student Response
             StudentResponse.objects.update_or_create(
                 student=student, question=question,
-                defaults={"answer_text": response_text, "is_correct": is_correct, "score": score}
+                defaults={
+                    "answer_text": response_text,
+                    "is_correct": is_correct,
+                    "score": score,
+                    "ai_feedback": ai_feedback
+                }
             )
 
             if score is not None:
                 total_score += score  # ✅ Accumulate only graded responses
 
-        # ✅ Use Instructor-Defined Total Marks
+        # ✅ Normalize score based on instructor-defined total marks
         final_score = (total_score / total_marks) * exam.total_marks if total_marks else 0
 
         return JsonResponse({
@@ -270,8 +294,7 @@ class TakeExamView(View):
             "redirect_url": reverse_lazy("electronic_exams:exam_list"),
             "final_score": round(final_score, 2)  # ✅ Return properly scaled score
         })
-
-
+    
 @login_required
 def auto_save_response(request):
     """Handles real-time auto-save for student answers."""

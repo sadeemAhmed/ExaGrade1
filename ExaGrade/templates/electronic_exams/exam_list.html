@@ -32,7 +32,7 @@
                             🗓 Created: <span class="font-medium">{{ exam.created_at|date:"F j, Y" }}</span>
                         </p>
 
-                        <!-- Total Marks -->
+                        <!-- Total Marks (Instructor View) -->
                         <p class="text-gray-700 text-sm mt-1 flex items-center gap-2">
                             🔢 Total Marks: <span class="font-bold text-blue-600">{{ exam.total_marks }}</span>
                         </p>
@@ -57,7 +57,9 @@
                                 {% elif student_grade == "Not Graded Yet" %}
                                     <span class="font-semibold text-yellow-500">Not Graded Yet</span>
                                 {% else %}
-                                    <span class="font-semibold text-green-600">{{ student_grade }} / {{ exam.total_marks }}</span>
+                                    <span class="font-semibold text-green-600">
+                                        {{ student_grade }} / {{ exam.total_marks }}
+                                    </span>
                                 {% endif %}
                             {% endwith %}
                         </p>
